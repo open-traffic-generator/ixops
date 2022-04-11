@@ -7,7 +7,7 @@ The easiest way to manage emulated network topologies involving [Ixia-C](https:/
 - Install latest
 
     ```sh
-    go install github.com/open-traffic-generator/ixops
+    go install github.com/open-traffic-generator/ixops@latest
     ```
 
 - Check usage
