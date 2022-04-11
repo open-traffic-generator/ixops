@@ -17,7 +17,7 @@ func TestRootCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command(ixOps, tt.args...)
 			out, err := cmd.CombinedOutput()
-			t.Logf("cmd output: %s\n", out)
+			t.Logf("cmd output:\n%s\n", out)
 			if tt.name == "bad" {
 				if err == nil {
 					t.Fatalf("cmd did not fail")
@@ -39,21 +39,18 @@ func TestTopologyCmd(t *testing.T) {
 		{name: "topology", args: []string{"topology", "help"}},
 		{name: "create", args: []string{"topology", "create", "help"}},
 		{name: "delete", args: []string{"topology", "delete", "help"}},
-		// {name: "bad", args: []string{"topology", "bad", "help"}},
+		{name: "bad", args: []string{"topology", "bad", "help"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command(ixOps, tt.args...)
 			out, err := cmd.CombinedOutput()
-			t.Logf("cmd output: %s\n", out)
-			if tt.name == "bad" {
-				if err == nil {
-					t.Fatalf("cmd did not fail")
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("cmd failed: %v\n", err)
-				}
+			t.Logf("cmd output:\n%s\n", out)
+			if err != nil {
+				t.Fatalf("cmd failed: %v\n", err)
+			}
+			if tt.name == "bad" && len(out) == 0 {
+				t.Fatal("cmd did not print usage")
 			}
 		})
 	}
@@ -67,21 +64,18 @@ func TestClusterCmd(t *testing.T) {
 		{name: "cluster", args: []string{"cluster", "help"}},
 		{name: "setup", args: []string{"cluster", "setup", "help"}},
 		{name: "teardown", args: []string{"cluster", "teardown", "help"}},
-		// {name: "bad", args: []string{"cluster", "bad", "help"}},
+		{name: "bad", args: []string{"cluster", "bad", "help"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command(ixOps, tt.args...)
 			out, err := cmd.CombinedOutput()
-			t.Logf("cmd output: %s\n", out)
-			if tt.name == "bad" {
-				if err == nil {
-					t.Fatalf("cmd did not fail")
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("cmd failed: %v\n", err)
-				}
+			t.Logf("cmd output:\n%s\n", out)
+			if err != nil {
+				t.Fatalf("cmd failed: %v\n", err)
+			}
+			if tt.name == "bad" && len(out) == 0 {
+				t.Fatal("cmd did not print usage")
 			}
 		})
 	}
@@ -95,21 +89,18 @@ func TestImagesCmd(t *testing.T) {
 		{name: "images", args: []string{"images", "help"}},
 		{name: "get", args: []string{"images", "get", "help"}},
 		{name: "rm", args: []string{"images", "rm", "help"}},
-		// {name: "bad", args: []string{"images", "bad", "help"}},
+		{name: "bad", args: []string{"images", "bad", "help"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command(ixOps, tt.args...)
 			out, err := cmd.CombinedOutput()
-			t.Logf("cmd output: %s\n", out)
-			if tt.name == "bad" {
-				if err == nil {
-					t.Fatalf("cmd did not fail")
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("cmd failed: %v\n", err)
-				}
+			t.Logf("cmd output:\n%s\n", out)
+			if err != nil {
+				t.Fatalf("cmd failed: %v\n", err)
+			}
+			if tt.name == "bad" && len(out) == 0 {
+				t.Fatal("cmd did not print usage")
 			}
 		})
 	}
