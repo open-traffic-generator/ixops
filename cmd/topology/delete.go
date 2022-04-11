@@ -6,7 +6,7 @@ import (
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete Topology",
+	Short: "Delete topology",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},

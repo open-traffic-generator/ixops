@@ -5,8 +5,9 @@ import (
 )
 
 var clusterCmd = &cobra.Command{
-	Use:   "cluster",
-	Short: "Manage Cluster",
+	Use:          "cluster",
+	Short:        "Manage Cluster",
+	SilenceUsage: true,
 }
 
 func Cmd() *cobra.Command {

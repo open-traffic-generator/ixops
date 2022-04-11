@@ -6,7 +6,7 @@ import (
 
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create Topology",
+	Short: "Create topology",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},

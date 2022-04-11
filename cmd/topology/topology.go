@@ -5,8 +5,9 @@ import (
 )
 
 var topologyCmd = &cobra.Command{
-	Use:   "topology",
-	Short: "Manage Topology",
+	Use:          "topology",
+	Short:        "Manage topology",
+	SilenceUsage: true,
 }
 
 func Cmd() *cobra.Command {

@@ -6,7 +6,7 @@ import (
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Setup Cluster",
+	Short: "Setup cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},

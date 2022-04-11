@@ -5,8 +5,9 @@ import (
 )
 
 var imagesCmd = &cobra.Command{
-	Use:   "images",
-	Short: "Manage container images",
+	Use:          "images",
+	Short:        "Manage container images",
+	SilenceUsage: true,
 }
 
 func Cmd() *cobra.Command {

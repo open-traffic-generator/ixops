@@ -6,7 +6,7 @@ import (
 
 var teardownCmd = &cobra.Command{
 	Use:   "teardown",
-	Short: "Teardown Cluster",
+	Short: "Teardown cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},
