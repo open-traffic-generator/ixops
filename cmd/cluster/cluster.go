@@ -6,7 +6,7 @@ import (
 
 var clusterCmd = &cobra.Command{
 	Use:          "cluster",
-	Short:        "Manage Cluster",
+	Short:        "Manage cluster",
 	SilenceUsage: true,
 }
 

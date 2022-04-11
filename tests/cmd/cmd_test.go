@@ -105,3 +105,27 @@ func TestImagesCmd(t *testing.T) {
 		})
 	}
 }
+
+func TestDiagnosticsCmd(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{name: "diagnostics", args: []string{"diagnostics", "help"}},
+		{name: "collect", args: []string{"diagnostics", "collect", "help"}},
+		{name: "bad", args: []string{"diagnostics", "bad", "help"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command(ixOps, tt.args...)
+			out, err := cmd.CombinedOutput()
+			t.Logf("cmd output:\n%s\n", out)
+			if err != nil {
+				t.Fatalf("cmd failed: %v\n", err)
+			}
+			if tt.name == "bad" && len(out) == 0 {
+				t.Fatal("cmd did not print usage")
+			}
+		})
+	}
+}
