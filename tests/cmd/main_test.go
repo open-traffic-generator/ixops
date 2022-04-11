@@ -8,7 +8,7 @@ import (
 
 var (
 	rootDir = "../.."
-	ixOps   = path.Join(rootDir, "ixops")
+	ixOps   = path.Join(".", "ixops")
 )
 
 // TestMain is the first thing that's executed upon running `go test ...`
