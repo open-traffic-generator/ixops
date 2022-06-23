@@ -9,12 +9,10 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// setup.CreateKindConfig()
-		// setup.InstallKind("0.13.0")
-		// setup.CreateKindCluster()
-		// setup.GetKubectl()
-		// setup.GetMetallb()
-		setup.MakeMetallbConfig()
+		err := setup.SetupCluster()
+		if err != nil {
+			return err
+		}
 		return nil
 	},
 }
