@@ -9,7 +9,11 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := setup.SetupCluster()
+		err := setup.CommonSetup(&args)
+		if err != nil {
+			return err
+		}
+		err = setup.SetupCluster()
 		if err != nil {
 			return err
 		}
