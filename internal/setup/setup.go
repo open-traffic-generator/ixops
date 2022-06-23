@@ -56,6 +56,24 @@ func getKind(kindVersion string) error {
 	return nil
 }
 
+func kindClusterExists() (bool, error) {
+	errorString := ""
+	log.Println("Checking for existing kind cluster....")
+	_, err := utils.ExecCmd("kind", "get", "clusters")
+	if err != nil {
+		if strings.Contains(err.Error(), "No kind clusters found") {
+			log.Println("No existing kind cluster...")
+			return false, nil
+		} else {
+			errorString = fmt.Sprintf("Failed checking for any existing kind cluster: %v", err)
+			log.Println(errorString)
+			return false, err
+		}
+	}
+	log.Println("kind cluster already exists...")
+	return true, nil
+}
+
 func deployBasicCluster(configFilePath string, waitTime int) error {
 	log.Printf("Deploying basic kind cluster...\n")
 	_, err := utils.ExecCmd("kind", "create", "cluster", "--config", configFilePath, "--wait", fmt.Sprintf("%ds", waitTime))
@@ -81,7 +99,7 @@ func getKubectl() error {
 	_, err = utils.ExecCmd("docker", "cp", "kind-control-plane:/usr/bin/kubectl", "./")
 	if err != nil {
 		errorString = fmt.Sprintf("Failed to copy kubectl from kind container: %v", err)
-		log.Println(err)
+		log.Println(errorString)
 		return fmt.Errorf(errorString)
 	}
 
@@ -303,17 +321,23 @@ func getIxiaCOperator(version string, waitTime int64) error {
 }
 
 func SetupCluster() error {
-	kindConfigFilePath, err := createKindConfig(KindConfigFile, NodeCount)
+	err := getKind(KindVersion)
 	if err != nil {
 		return err
 	}
 
-	err = getKind(KindVersion)
+	clusterExists, err := kindClusterExists()
 	if err != nil {
 		return err
 	}
 
-	deployBasicCluster(kindConfigFilePath, TimeOut)
+	if !clusterExists {
+		kindConfigFilePath, err := createKindConfig(KindConfigFile, NodeCount)
+		if err != nil {
+			return err
+		}
+		deployBasicCluster(kindConfigFilePath, TimeOut)
+	}
 
 	err = getKubectl()
 	if err != nil {
