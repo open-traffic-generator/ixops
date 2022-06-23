@@ -22,7 +22,7 @@ func checkPlatform() error {
 	gpi, _ := getPlatformInfo() // Need to add Error Handling
 	res := strings.Split(gpi.OsVersion, " ")
 
-	fullVer := strings.Split(res[1], ".")
+	fullVer := strings.Split(res[0], ".")
 	mainVer, _ := strconv.ParseInt(fullVer[0], 10, 64)
 
 	comp := strings.Compare(string(gpi.Os), "Ubuntu")

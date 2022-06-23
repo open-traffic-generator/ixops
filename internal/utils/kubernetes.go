@@ -1,66 +1,69 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"strings"
+	"os"
+	"path/filepath"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-func GetAllNamespaces() ([]string, error) {
-	out, err := ExecCmd("kubectl", "get", "namespaces", "-o", "jsonpath={.items[*].metadata.name}")
-	if err != nil {
-		log.Printf("Failed to get all namespaces: %v\n", err)
-		return nil, fmt.Errorf(fmt.Sprintf("Failed to get all namespaces: %v", err))
-	}
-	log.Printf("currently deployed namespaces are: %v\n", strings.Split(out, " "))
-	return strings.Split(out, " "), nil
+type K8sClient struct {
+	config    *rest.Config
+	clientSet *kubernetes.Clientset
 }
 
-func GetPods(namespace string) ([]string, error) {
-	out, err := ExecCmd("kubectl", "get", "pods", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name}")
+func NewK8sClient() (*K8sClient, error) {
+	log.Printf("Creating k8s client...")
+	var config *rest.Config
+	var err error
+
+	userHome, err := os.UserHomeDir()
 	if err != nil {
-		log.Printf("Failed to get all namespaces: %v", err)
-		return nil, fmt.Errorf(fmt.Sprintf("Failed to get pods for namespace %s: %v", namespace, err))
+		log.Printf("failed to get home: %v\n", err)
+		return nil, fmt.Errorf(fmt.Sprintf("failed to get home: %v\n", err))
 	}
-	log.Printf("currently deployed pods in namespace %s: %v\n", namespace, strings.Split(out, " "))
-	return strings.Split(out, " "), nil
+
+	kubeCfgLoc := filepath.Join(userHome, ".kube", "config")
+	log.Printf("Using .kube/config...")
+	config, err = clientcmd.BuildConfigFromFlags("", kubeCfgLoc)
+	if err != nil {
+		return nil, fmt.Errorf("error in building config from %s: %s", kubeCfgLoc, err.Error())
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("error in creating clientset: %s", err.Error())
+	}
+	log.Println("Successfully created k8s client !")
+
+	return &K8sClient{
+		config:    config,
+		clientSet: clientset,
+	}, nil
 }
 
-func PodReady(pod string, namespace string, waitTime int64) error {
-	log.Printf("waiting for pod %s in namespace %s to be ready with in %d seconds\n", pod, namespace, waitTime)
-	_, err := ExecCmd("kubectl", "wait", "-n", namespace, fmt.Sprintf("pod/%s", pod), "--for", "condition=ready", "--timeout", fmt.Sprintf("%ds", waitTime))
+func (c *K8sClient) AllPodsAreReady(namespace string) (bool, error) {
+	pods, err := c.clientSet.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{})
 	if err != nil {
-		log.Printf("pod %s in namespace %s is not ready with in %d seconds\n", pod, namespace, waitTime)
-		return fmt.Errorf(fmt.Sprintf("pod %s in namespace %s is not ready with in %d seconds\n", pod, namespace, waitTime))
+		return false, err
 	}
-	return nil
-}
-
-func WaitForAllPodsToBeReady(namespace string, waitTime int64) error {
-	errorString := ""
-
-	actualNamespaces, err := GetAllNamespaces()
-	if err != nil {
-		return err
+	if len(pods.Items) == 0 {
+		return false, nil
 	}
-
-	if !Contains(actualNamespaces, namespace) {
-		errorString = fmt.Sprintf("%s not found", namespace)
-		log.Println(err)
-		return fmt.Errorf(errorString)
-	}
-
-	actualPods, err := GetPods(namespace)
-	if err != nil {
-		return err
-	}
-
-	for _, pod := range actualPods {
-		err := PodReady(pod, namespace, waitTime)
-		if err != nil {
-			return err
+	for _, pod := range pods.Items {
+		for _, condition := range pod.Status.Conditions {
+			log.Printf("waiting for pod %s in namespace %s to be ready....", pod.Name, namespace)
+			if condition.Status != "True" {
+				return false, nil
+			}
+			log.Printf("pod %s in namespace %s: condition: %s, is ready", pod.Name, namespace, condition.Type)
 		}
 	}
-	return nil
-
+	return true, nil
 }

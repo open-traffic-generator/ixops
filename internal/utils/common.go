@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 func ExecCmd(cmd string, args ...string) (string, error) {
@@ -53,4 +54,46 @@ func Contains(slice []string, item string) bool {
 
 	_, ok := set[item]
 	return ok
+}
+
+func WaitFor(fn func() (bool, error), opts *WaitForOpts) error {
+	if opts == nil {
+		opts = &WaitForOpts{
+			Condition: "condition to be true",
+		}
+	}
+
+	if opts.Interval == 0 {
+		opts.Interval = 500 * time.Millisecond
+	}
+	if opts.Timeout == 0 {
+		opts.Timeout = 300 * time.Second
+	}
+
+	start := time.Now()
+	log.Printf("Waiting for %s ...\n", opts.Condition)
+
+	for {
+		done, err := fn()
+		if err != nil {
+			return fmt.Errorf("error waiting for %s: %v", opts.Condition, err)
+		}
+		if done {
+			log.Printf("Done waiting for %s\n", opts.Condition)
+			return nil
+		}
+
+		if time.Since(start) > opts.Timeout {
+			return fmt.Errorf("timeout occurred while waiting for %s", opts.Condition)
+		}
+		time.Sleep(opts.Interval)
+	}
+}
+
+func FileRelative(p string) (string, error) {
+	bp, err := filepath.Abs(p)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(bp), nil
 }

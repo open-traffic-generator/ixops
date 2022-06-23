@@ -199,7 +199,13 @@ func getMetallb(version string, metallbConfigFile string, waitTime int64) error 
 	utils.ExecCmd("kubectl", "apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/metallb/metallb/%s/manifests/metallb.yaml", version))
 
 	log.Printf("Waiting for pods to be ready...")
-	err = utils.WaitForAllPodsToBeReady("metallb-system", waitTime)
+	kubeClient, err := utils.NewK8sClient()
+	if err != nil {
+		errorString = fmt.Sprintf("failed to create k8s client: %v", err)
+		log.Println(err)
+		return fmt.Errorf(errorString)
+	}
+	err = utils.WaitFor(func() (bool, error) { return kubeClient.AllPodsAreReady("metallb-system") }, nil)
 	if err != nil {
 		errorString = fmt.Sprintf("metallb-system pods are not ready: %v", err)
 		log.Println(err)
@@ -290,7 +296,13 @@ func getMeshnet(commit string, version string, waitTime int64) error {
 	utils.ExecCmd("kubectl", "apply", "-k", baseDirectory)
 
 	log.Printf("Waiting for pods to be ready...")
-	err = utils.WaitForAllPodsToBeReady("meshnet", waitTime)
+	kubeClient, err := utils.NewK8sClient()
+	if err != nil {
+		errorString = fmt.Sprintf("failed to create k8s client: %v", err)
+		log.Println(err)
+		return fmt.Errorf(errorString)
+	}
+	err = utils.WaitFor(func() (bool, error) { return kubeClient.AllPodsAreReady("meshnet") }, nil)
 	if err != nil {
 		errorString = fmt.Sprintf("meshnet pods are not ready: %v", err)
 		log.Println(err)
@@ -311,9 +323,15 @@ func getIxiaCOperator(version string, waitTime int64) error {
 	}
 
 	log.Printf("Waiting for pods to be ready...")
-	err = utils.WaitForAllPodsToBeReady("ixiatg-op-system", waitTime)
+	kubeClient, err := utils.NewK8sClient()
 	if err != nil {
-		errorString = fmt.Sprintf("metallb-system pods are not ready: %v", err)
+		errorString = fmt.Sprintf("failed to create k8s client: %v", err)
+		log.Println(err)
+		return fmt.Errorf(errorString)
+	}
+	err = utils.WaitFor(func() (bool, error) { return kubeClient.AllPodsAreReady("ixiatg-op-system") }, nil)
+	if err != nil {
+		errorString = fmt.Sprintf("ixiatg-op-system pods are not ready: %v", err)
 		log.Println(err)
 		return fmt.Errorf(errorString)
 	}
