@@ -157,7 +157,9 @@ func getAndInstallDocker() error {
 }
 
 func dockerList() {
-	cmd1 := exec.Command("echo", "deb", "[arch=amd64", "signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]", "https://download.docker.com/linux/ubuntu", "jammy", "stable")
+	lsbRelease, _ := utils.ExecCmd("lsb_release", "-cs")
+	lsbRelease = strings.ReplaceAll(lsbRelease, "\n", "")
+	cmd1 := exec.Command("echo", "deb", "[arch=amd64", "signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]", "https://download.docker.com/linux/ubuntu", lsbRelease, "stable")
 	cmd2 := exec.Command("sudo", "tee", "/etc/apt/sources.list.d/docker.list")
 
 	// Get the pipe of Stdout from cmd1 and assign it
