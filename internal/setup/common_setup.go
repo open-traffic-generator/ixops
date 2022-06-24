@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -36,15 +35,15 @@ func checkPlatform() error {
 
 func getPlatformInfo() (Platform, error) {
 	gio := Platform{}
+	os := ""
 	out, err := utils.ExecCmd("grep", "Ubuntu", "/etc/os-release")
 	if err != nil {
 		return gio, err
 	}
-	out = strings.TrimSpace(out)
-	var lines []string = regexp.MustCompile("\r?\n").Split(out, -1)
-	res1 := strings.SplitAfter(lines[0], "=")
-	os := strings.TrimSpace(res1[1])
-	os = strings.ReplaceAll(os, "\"", "")
+
+	if strings.Contains(out, "Ubuntu") {
+		os = "Ubuntu"
+	}
 
 	out, err = utils.ExecCmd("grep", "VERSION_ID", "/etc/os-release")
 	if err != nil {
@@ -112,29 +111,26 @@ func getSysPkgs() error {
 	return nil
 }
 
+func dockerExists() bool {
+	log.Println("Checking for existing Docker....")
+	out, _ := utils.ExecCmd("which", "docker")
+	if strings.Contains(out, "docker") {
+		log.Print("Docker Already Exists")
+		return true
+	} else {
+		log.Print("Docker doesn't Exist, Installing Docker")
+		return false
+	}
+}
+
 func getAndInstallDocker() error {
 	log.Print("Installing docker")
-	_, err := utils.ExecCmd("sudo", "apt-get", "remove", "docker-engine", "docker.io")
-	if err != nil {
-		return fmt.Errorf(err.Error())
-	}
+	utils.ExecCmd("sudo", "apt-get", "remove", "docker-engine", "docker.io", "containerd", "runc", "2")
 
 	dockergpg()
+	dockerList()
 
-	lsbRelease, _ := utils.ExecCmd("lsb_release", "-cs")
-	lsbRelease = strings.ReplaceAll(lsbRelease, "\n", "")
-	out, err := utils.ExecCmd("echo", "deb", "[arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]", "https://download.docker.com/linux/ubuntu", lsbRelease, "stable")
-	if err != nil {
-		return fmt.Errorf(err.Error())
-	}
-
-	_, err = utils.ExecCmd("sudo", "chmod", "777", "/etc/apt/sources.list.d/docker.list")
-	if err != nil {
-		return fmt.Errorf(err.Error())
-	}
-	createFileAndwrite("/etc/apt/sources.list.d/docker.list", []byte(out))
-
-	_, err = utils.ExecCmd("sudo", "apt-get", "update")
+	_, err := utils.ExecCmd("sudo", "apt-get", "update")
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}
@@ -158,6 +154,34 @@ func getAndInstallDocker() error {
 	}
 
 	return nil
+}
+
+func dockerList() {
+	cmd1 := exec.Command("echo", "deb", "[arch=amd64", "signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]", "https://download.docker.com/linux/ubuntu", "jammy", "stable")
+	cmd2 := exec.Command("sudo", "tee", "/etc/apt/sources.list.d/docker.list")
+
+	// Get the pipe of Stdout from cmd1 and assign it
+	// to the Stdin of cmd2.
+	pipe, err := cmd1.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd2.Stdin = pipe
+
+	// Start() cmd1, so we don't block on it.
+	err = cmd1.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Run Output() on cmd2 to capture the output.
+	output, err := cmd2.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(output))
+
 }
 
 func dockergpg() {
@@ -208,9 +232,11 @@ func CommonSetup(args *[]string) error {
 		return err
 	}
 
-	err = getAndInstallDocker()
-	if err != nil {
-		return err
+	if !dockerExists() {
+		err = getAndInstallDocker()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

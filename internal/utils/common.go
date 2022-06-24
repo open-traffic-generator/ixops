@@ -31,7 +31,9 @@ func ExecCmd(cmd string, args ...string) (string, error) {
 		errorString += fmt.Sprintf("failed to wait for command to be executed: %s\n%v", shellError.String(), err)
 	}
 
-	log.Printf("Error: %v\n", errorString)
+	if errorString != "" {
+		log.Printf("Error: %v\n", errorString)
+	}
 
 	if errorString != "" {
 		return "", fmt.Errorf(errorString)
