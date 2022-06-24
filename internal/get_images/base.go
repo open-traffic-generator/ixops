@@ -5,7 +5,7 @@ const (
 	FileName      = "ixia-configmap.yaml"
 	centralDocker = "us-central1-docker.pkg.dev/kt-nts-athena-dev/keysight/"
 	ghrc          = "ghcr.io/open-traffic-generator/"
-	Pat           = "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"
+	Pat           = "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"
 	OtgGit        = "https://github.com/open-traffic-generator/ixia-c/releases/download"
 )
 
