@@ -19,4 +19,7 @@
     "files.insertFinalNewline": true,
     "files.eol": "\n",
     "diffEditor.ignoreTrimWhitespace": false,
+    "cSpell.ignoreWords": [
+        "goVersion"
+    ],
 }

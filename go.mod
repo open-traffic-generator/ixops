@@ -3,6 +3,7 @@ module github.com/open-traffic-generator/ixops
 go 1.18
 
 require (
+	github.com/creasty/defaults v1.6.0
 	github.com/google/kne v0.1.1-0.20220602171531-3e14252d2039
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0

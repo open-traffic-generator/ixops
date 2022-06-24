@@ -122,3 +122,13 @@ func ReadUrlAndWrite(filepath string, url string) (err error) {
 	}
 	return nil
 }
+
+func FileExists(filePath string) bool {
+	if _, err := os.Stat(filePath); err == nil {
+		log.Printf("%s file exists...", filePath)
+		return true
+	} else {
+		log.Printf("%s file not exists...", filePath)
+		return false
+	}
+}
