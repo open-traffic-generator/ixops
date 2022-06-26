@@ -1,16 +1,21 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
+	core_v1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
 )
 
 type K8sClient struct {
@@ -66,4 +71,61 @@ func (c *K8sClient) AllPodsAreReady(namespace string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func (c *K8sClient) GetPod(namespace string, podname string) (p *core_v1.Pod, err error) {
+
+	pod, err := c.clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, v1.GetOptions{})
+	if err != nil {
+		fmt.Printf("Pod %s in namespace %s not found\n", pod, namespace)
+	} else {
+		fmt.Printf("Found pod %s in namespace %s\n", podname, namespace)
+	}
+	return pod, nil
+
+}
+
+func (c *K8sClient) Exec(p *core_v1.Pod, command []string) (string, error) {
+
+	attachOptions := &core_v1.PodExecOptions{
+		Container: p.Spec.Containers[0].Name,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+		Command:   command,
+	}
+
+	request := c.clientSet.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(p.Name).
+		Namespace(p.Namespace).
+		SubResource("exec").
+		VersionedParams(attachOptions, scheme.ParameterCodec)
+
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	streamOptions := remotecommand.StreamOptions{
+		Stdout: stdout,
+		Stderr: stderr,
+	}
+
+	exec, err := remotecommand.NewSPDYExecutor(c.config, "POST", request.URL())
+	if err != nil {
+		fmt.Println(exec)
+		return "", err
+	}
+
+	err = exec.Stream(streamOptions)
+	if err != nil {
+		result := strings.TrimSpace(stdout.String()) + "\n" + strings.TrimSpace(stderr.String())
+		result = strings.TrimSpace(result)
+		log.Print(result)
+		return "", err
+	}
+
+	result := strings.TrimSpace(stdout.String()) + "\n" + strings.TrimSpace(stderr.String())
+	result = strings.TrimSpace(result)
+	log.Print(result)
+	return result, nil
 }

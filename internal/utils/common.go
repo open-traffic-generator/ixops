@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -133,4 +135,19 @@ func FileExists(filePath string) bool {
 		log.Printf("%s file not exists...", filePath)
 		return false
 	}
+}
+
+func GetHomeDirectory() (string, error) {
+	log.Print("Get Home Directory")
+	user, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	homeDirectory := user.HomeDir
+	return homeDirectory, nil
+}
+
+func ReturnPath(files []string) string {
+	justString := strings.Join(files, "/")
+	return justString
 }
