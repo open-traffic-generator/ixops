@@ -88,6 +88,7 @@ type Config struct {
 	KubernetsVersion    string                `default:"v1.23.6" yaml:"kubernets_version"`
 	MetaLLBVersion      string                `default:"v0.12" yaml:"metallb_version"`
 	ContainerLabVersion string                `default:"0.26.2" yaml:"containerlab_version"`
+	IxOpsHome           string                `default:".ixops" yaml:"ixops_home"`
 	IxiaC               IxiaCConfig           `yaml:"ixia_c"`
 	FeaturesProfile     FeaturesProfileConfig `yaml:"features_profile"`
 	Meshnet             MeshnetConfig         `yaml:"meshnet"`

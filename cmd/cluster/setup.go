@@ -15,7 +15,7 @@ var setupCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args[0]) != 0 {
 			if utils.FileExists(args[0]) {
-				err := config.ReadConfigYaml(args[0])
+				_, err := config.ReadConfigYaml(args[0])
 				if err != nil {
 					return err
 				}

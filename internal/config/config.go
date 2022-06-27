@@ -9,23 +9,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func ReadConfigYaml(filePath string) error {
+func ReadConfigYaml(filePath string) (Config, error) {
+	config := Config{}
 	errorString := ""
 	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		errorString = fmt.Sprintf("failed to read %s: %v", filePath, err)
 		log.Println(err)
-		return fmt.Errorf(errorString)
+		return config, fmt.Errorf(errorString)
 	}
 
-	config := Config{}
 	err = yaml.Unmarshal(yamlFile, &config)
 	if err != nil {
 		errorString = fmt.Sprintf("failed to unmarshall %v: %v", string(yamlFile), err)
 		log.Println(err)
-		return fmt.Errorf(errorString)
+		return config, fmt.Errorf(errorString)
 	}
-	return nil
+	return config, nil
 }
 
 func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
