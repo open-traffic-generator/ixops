@@ -72,6 +72,7 @@ func setupIxopsHome() error {
 	}
 	homeDirectory := user.HomeDir
 	createDirectory(homeDirectory + "/.ixops")
+	createDirectory(homeDirectory + "/.ixops/ixia-c")
 	return nil
 }
 
