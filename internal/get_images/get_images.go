@@ -94,11 +94,14 @@ func DownloadAndLoadAllImages() error {
 	// Pull DUT image static for now, have to update later
 	utils.ExecCmd("kind", "load", "docker-image", "ghcr.io/open-traffic-generator/ceos:4.28.01f")
 
+	utils.ExecCmd("kubectl", "apply", "-f", FileName)
+
 	return nil
 
 }
 
 func dockerLoginGhrc() {
+	log.Print("Docker login to ghcr")
 	cmd1 := exec.Command("echo", Pat)
 	cmd2 := exec.Command("sudo", "docker", "login", "ghcr.io", "-u", "USERNAME", "--password-stdin")
 
