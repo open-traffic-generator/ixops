@@ -53,6 +53,7 @@ const (
 	GCloudRegion         = "us-central1"
 	GCloudZone           = "us-central1-a"
 	GCloudUser           = "test"
+	GCloudEmail          = ""
 	GCloudWorkerNodes    = 1
 	GCloudMasterNodeType = "e2-standard-4"
 	GCloudWorkerNodeType = "e2-standard-8"
@@ -67,6 +68,10 @@ const (
 	IxiaCOperatorVersion = "v0.1.94"
 	MeshnetCommit        = "de89b2e"
 	MeshnetVersion       = "v0.3.0"
+)
+
+var (
+	ClusterTypeGC = true
 )
 
 func setKopsEnv() error {

@@ -1,6 +1,7 @@
 package topology
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/google/kne/proto/topo"
 	topo1 "github.com/google/kne/topo"
+	"github.com/open-traffic-generator/ixops/internal/setup"
 	"github.com/open-traffic-generator/ixops/internal/utils"
 	"gopkg.in/yaml.v2"
 )
@@ -244,6 +246,71 @@ func getTopologyNamespace(topologyFile string) (string, error) {
 	return "", fmt.Errorf(errorString)
 }
 
+func createSecrets(topoFilePath string) error {
+	file, err := os.Open(topoFilePath)
+	if err != nil {
+		log.Printf("Failed to read topology file %s\n", topoFilePath)
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	namespace := ""
+	for scanner.Scan() {
+		text := scanner.Text()
+		if strings.HasPrefix(text, "name:") {
+			namespace = strings.TrimSpace(text[5:])
+			if namespace[0] == '"' {
+				namespace = namespace[1 : len(namespace)-1]
+			}
+			break
+		}
+	}
+	if namespace == "" {
+		errStr := fmt.Sprintf("Failed to find namespace in topology file\n")
+		log.Println(errStr)
+		return fmt.Errorf(errStr)
+	}
+
+	log.Printf("Creating namespace %s\n", namespace)
+	_, err = utils.ExecCmd("kubectl", "create", "ns", namespace)
+	if err != nil {
+		log.Printf("Failed to create namespace error - %v\n", err)
+		return err
+	}
+
+	log.Printf("Creating secret in namespace %s\n", namespace)
+	home := os.Getenv("HOME")
+	keyFileName := "ixia-c-automation.json"
+	keyFilePath := fmt.Sprintf("%s/.ixops/%s", home, keyFileName)
+	data, err := ioutil.ReadFile(keyFilePath)
+	if err != nil {
+		log.Printf("Failed to read key file error - %v\n", err)
+		return err
+	}
+
+	args := []string{"create", "secret", "-n", namespace, "docker-registry", "kne-pull-secret"}
+	args = append(args, "--docker-server=us-central1-docker.pkg.dev")
+	args = append(args, "--docker-username=_json_key")
+	args = append(args, fmt.Sprintf("--docker-password=\"%s\"", data))
+	args = append(args, fmt.Sprintf("--docker-email=%s", setup.GCloudEmail))
+	_, err = utils.ExecCmd("kubectl", args...)
+	if err != nil {
+		log.Printf("Failed to create kne secret error - %v\n", err)
+		return err
+	}
+	args[5] = "ixia-pull-secret"
+	_, err = utils.ExecCmd("kubectl", args...)
+	if err != nil {
+		log.Printf("Failed to create ixia secret error - %v\n", err)
+		return err
+	}
+
+	log.Printf("Secrets created successfully")
+	return nil
+}
+
 func CreateTopologyWithFile(topologyFile string) error {
 	errorString := ""
 	userHome, err := os.UserHomeDir()
@@ -258,6 +325,13 @@ func CreateTopologyWithFile(topologyFile string) error {
 		errorString = fmt.Sprintf("failed to get relative path: %v\n", err)
 		log.Println(errorString)
 		return fmt.Errorf(errorString)
+	}
+
+	if setup.ClusterTypeGC {
+		err = createSecrets(topologyFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	kubeCfgLoc := filepath.Join(userHome, ".kube", "config")

@@ -598,6 +598,7 @@ func getIxiaCOperator(version string, waitTime int64) error {
 
 func SetupCluster(kopsSetup bool) error {
 	var err error
+	ClusterTypeGC = kopsSetup
 	if kopsSetup {
 		err = setupGC(GCloudVersion)
 		if err != nil {
@@ -656,11 +657,11 @@ func SetupCluster(kopsSetup bool) error {
 		if err != nil {
 			return err
 		}
-	}
 
-	err = getMetallb(MetallbVersion, MetallbConfigFile, TimeOut)
-	if err != nil {
-		return err
+		err = getMetallb(MetallbVersion, MetallbConfigFile, TimeOut)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = getMeshnet(MeshnetCommit, MeshnetVersion, TimeOut)
