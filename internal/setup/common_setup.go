@@ -72,6 +72,7 @@ func setupIxopsHome() error {
 	}
 	homeDirectory := user.HomeDir
 	createDirectory(homeDirectory + "/.ixops")
+	createDirectory(homeDirectory + "/.ixops/ixia-c")
 	return nil
 }
 
@@ -240,5 +241,11 @@ func CommonSetup(args *[]string) error {
 			return err
 		}
 	}
+
+	_, err = utils.ExecCmd("sudo", "chmod", "666" , "/var/run/docker.sock")
+	if err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	
 	return nil
 }
