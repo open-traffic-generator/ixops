@@ -14,6 +14,10 @@ var setupCmd = &cobra.Command{
 	Short: "Setup cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args[0]) != 0 {
+			kopsSetup := true
+			if len(args) > 1 && args[1] == "kind" {
+				kopsSetup = false
+			}
 			if utils.FileExists(args[0]) {
 				_, err := config.ReadConfigYaml(args[0])
 				if err != nil {
@@ -23,7 +27,7 @@ var setupCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				err = setup.SetupCluster()
+				err = setup.SetupCluster(kopsSetup)
 				if err != nil {
 					return err
 				}

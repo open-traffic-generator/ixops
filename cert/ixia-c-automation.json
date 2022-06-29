@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "kt-nts-athena-dev",
+  "private_key_id": "5e72da494b4838583317278c5d59a9900367644d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCPnGRKKhX2qR6K\nT2xgScRSBPgJY1EcWYwp9x+ktto09MCD1PUPm9IDumng8P/HlQFQoVq04lMgLUxt\nQjh4w0IqqUweTTY60l1585sR3xDeKj9e+44ckl6lmByN/Kunnkj0EHAbefbizkOQ\nnpNqezrV1kL0FMQYIl6X/YpD9XS2u27V6Dfj6nAOsSrFazdsQJFhq/T0GQ1mPIXl\nVDdw5yvsseZCtoFB9sPg8LupZT4OmP0zkF+e5PlTz0pPWuFFXlHFfShPeM5t1M2t\ny1hQaZHC1WW43Upyi7St7zvOpNTeUrcShGr2CbC/uHivH8UJYRBGq51K8wKboFV+\nrZ/Rbp07AgMBAAECggEACNS3HhBkdVyE8kBcC7e9iMWhcwJWdIXVJqd5nKlZ1bPP\nOswXnbQZP/1wkVKAiAdTo1+oskLQlcPzVSyjSFnJcdIjSiG5WfihouQl/v1WjjLO\n3spdPMiLZWdrKhgFfjMvjUKNgkMHuX6xjO0TZ5LYVVntmBDG1i0W4AXJQNCRMsNQ\nQi57rJdwmHb6wmGjIZLhnieyQQqTiVwQ/Rm2Tql6FgJ50j+A7w77DlID3FXOGdum\n4PQlm3IsHkEsFOca8z47eMVELIwqoUGASOCyyYf4l/CvN161oi1VR5vdvrHvMc+c\nz3GvQmFpWwyBlX6ptAxxRp5uE2ej0V+OHiX024CZcQKBgQDCJw/LnIhQY1CQc3x0\n3YWGpYNk1Ad6IzwWl4svF+4paiC8FQb1qhqQDYxT2EH+C4gbiDUzrAcfzBXAZ3Ul\n/pUxnPchDRoNyCq57wBFIEKl2FKqySBSPxxaGg8rGlFqou1w9UV/uXQD3Fe8Q+qx\nSkKRVBnbwkqXf/czFyvAWrwwJwKBgQC9W7WfB4jsusbs0HJI5YDHVYxE3dMIBanE\nOWnI7WCh/J+oq+Lsnxt283eUAdFnawGWzNTY4r7gvqd6BSt9YeYMBWlh+5VO2X3E\nURbQ+2EZ6arNvGpzwu/VPs7T8LGQXMH6lMQFBelqilOcJhP4AU0qREeELjfnbD+X\nLfNDGl5CzQKBgQCsxbX4q0Nixf5bjWmjVb4NJBzZDRXaSqCeOh1RuynlENwwg0W+\nN7GLn4LQ2hFf0UM9vOgbI2rzkNmKboaBWRvLGrOQZehZe1cKPvUujpbAntBxyqlI\nh4DjbW0yHil1i6dgbeN61b238czhbE7dlgfG6+BW/38Bco64mFYGxrfQ4QKBgFIt\nrOK5iGkEnjREOnT8dSkNLXTtuBoxKv4n1IsIyflDA59WCYObgXXcL7ciGtkBDY1+\nk5kUvrYWx+Qivj8J76aj6ppFbwTrSrOaZYaIshlm2WO0M5bNsPwg5+3+9XCrcNvp\nGDD94dEE+0g3Fk95cR24yDjLPiPHTMm1fW9P0Dy5AoGAQm42ZjLFaWAm2M/jk8zl\nv864EYd3n/J0Di3H1IjDYkI5BEOOwnLADornbk+iFGUKKpRm3K+9LdL+b3/8TTMs\nge8176HzC2fkoCY7UM1r3vCkNODE/cpeDWAXh2YOsrcXgiLIte/dzrDKpAOiBRrJ\nOlpPdCPEZCAnPOwHq6H5TaA=\n-----END PRIVATE KEY-----\n",
+  "client_email": "ixia-c-automation@kt-nts-athena-dev.iam.gserviceaccount.com",
+  "client_id": "109579784485676422459",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ixia-c-automation%40kt-nts-athena-dev.iam.gserviceaccount.com"
+}
