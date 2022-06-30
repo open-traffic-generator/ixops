@@ -77,7 +77,15 @@ func setupGC(gcVersion string) error {
 	log.Printf("Installing GCloud@%s\n", gcVersion)
 	home := os.Getenv("HOME")
 	ixOpsHome := fmt.Sprintf("%s/.ixops", home)
-	_, err := utils.ExecCmd("rm", "-rf", fmt.Sprintf("%s/google-cloud-sdk", ixOpsHome))
+
+	// Check if gCloud SDK already exists
+	out, err := utils.ExecCmd(fmt.Sprintf("%s/google-cloud-sdk/bin/gcloud", ixOpsHome), "version")
+	if err == nil && strings.Contains(out, fmt.Sprintf("Google Cloud SDK %s", GCloudVersion)) {
+		log.Printf("gCloud already installed\n")
+		return nil
+	}
+
+	_, err = utils.ExecCmd("rm", "-rf", fmt.Sprintf("%s/google-cloud-sdk", ixOpsHome))
 	if err != nil {
 		log.Printf("failed to remove old GC - %v\n", err)
 		return err
@@ -107,10 +115,10 @@ func setupGC(gcVersion string) error {
 		log.Fatal(err)
 	}
 
-	err = os.Setenv("PATH", fmt.Sprintf("$PATH:%s/google-cloud-sdk/bin", ixOpsHome))
+	/* err = os.Setenv("PATH", fmt.Sprintf("$PATH:%s/google-cloud-sdk/bin", ixOpsHome))
 	if err != nil {
 		log.Fatal(err)
-	}
+	} */
 	return nil
 }
 
