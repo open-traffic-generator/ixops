@@ -275,7 +275,7 @@ func createSecrets(topoFilePath string) error {
 
 	log.Printf("Creating namespace %s\n", namespace)
 	_, err = utils.ExecCmd("kubectl", "create", "ns", namespace)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "AlreadyExists") {
 		log.Printf("Failed to create namespace error - %v\n", err)
 		return err
 	}
@@ -296,13 +296,13 @@ func createSecrets(topoFilePath string) error {
 	args = append(args, fmt.Sprintf("--docker-password=\"%s\"", data))
 	args = append(args, fmt.Sprintf("--docker-email=%s", setup.GCloudEmail))
 	_, err = utils.ExecCmd("kubectl", args...)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		log.Printf("Failed to create kne secret error - %v\n", err)
 		return err
 	}
 	args[5] = "ixia-pull-secret"
 	_, err = utils.ExecCmd("kubectl", args...)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		log.Printf("Failed to create ixia secret error - %v\n", err)
 		return err
 	}
