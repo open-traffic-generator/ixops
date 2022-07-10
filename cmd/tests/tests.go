@@ -6,13 +6,14 @@ import (
 
 var testsCmd = &cobra.Command{
 	Use:          "tests",
-	Short:        "Get and Run tests",
+	Short:        "Manage tests",
 	SilenceUsage: true,
 }
 
 func Cmd() *cobra.Command {
 	testsCmd.AddCommand(getCmd)
-	testsCmd.AddCommand(runCmd)
 	testsCmd.AddCommand(rmCmd)
+	testsCmd.AddCommand(runCmd)
+	testsCmd.AddCommand(lsCmd)
 	return testsCmd
 }

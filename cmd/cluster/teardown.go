@@ -1,7 +1,10 @@
 package cluster
 
 import (
-	"github.com/open-traffic-generator/ixops/internal/setup"
+	"fmt"
+
+	"github.com/open-traffic-generator/ixops/pkg/config"
+	"github.com/open-traffic-generator/ixops/pkg/ixexec"
 	"github.com/spf13/cobra"
 )
 
@@ -9,11 +12,15 @@ var teardownCmd = &cobra.Command{
 	Use:   "teardown",
 	Short: "Teardown cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		gcCluster := true
-		if len(args) > 0 && args[0] == "kind" {
-			gcCluster = false
+		cfg := config.Get()
+		if cfg.ClusterType == "kind" {
+			ixexec.ExecCmd("rm_kc")
+		} else if cfg.ClusterType == "gcp" {
+			ixexec.ExecCmd("rm_gc")
+		} else {
+			return fmt.Errorf("unsupported cluster type %v", cfg.ClusterType)
 		}
 
-		return setup.TeardownCluster(gcCluster)
+		return nil
 	},
 }

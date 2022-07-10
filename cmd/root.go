@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/open-traffic-generator/ixops/cmd/cfg"
 	"github.com/open-traffic-generator/ixops/cmd/cluster"
 	"github.com/open-traffic-generator/ixops/cmd/diagnostics"
 	"github.com/open-traffic-generator/ixops/cmd/images"
@@ -35,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(images.Cmd())
 	rootCmd.AddCommand(diagnostics.Cmd())
 	rootCmd.AddCommand(tests.Cmd())
+	rootCmd.AddCommand(cfg.Cmd())
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().BoolVarP(&debug, "verbose", "v", false, "Enable verbose logging")
 }

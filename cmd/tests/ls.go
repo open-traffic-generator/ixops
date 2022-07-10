@@ -5,11 +5,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run tests",
+var lsCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "List tests",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ixexec.ExecCmd("run_tc " + args[0])
+		ixexec.ExecCmd("ls_tc")
 		return nil
 	},
 }
