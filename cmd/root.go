@@ -4,22 +4,23 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/open-traffic-generator/ixops/cmd/cfg"
 	"github.com/open-traffic-generator/ixops/cmd/cluster"
+	"github.com/open-traffic-generator/ixops/cmd/config"
 	"github.com/open-traffic-generator/ixops/cmd/diagnostics"
 	"github.com/open-traffic-generator/ixops/cmd/images"
 	"github.com/open-traffic-generator/ixops/cmd/tests"
 	"github.com/open-traffic-generator/ixops/cmd/topology"
+	"github.com/open-traffic-generator/ixops/pkg/configs"
 	"github.com/spf13/cobra"
 )
 
-var (
-	debug bool
-)
-
 var rootCmd = &cobra.Command{
-	Use:          "ixops",
-	Short:        "Ixia-C Operations - the easiest way to manage emulated network topologies involving Ixia-C",
+	Use:   "ixops",
+	Short: "Ixia-C Operations - the easiest way to manage emulated network topologies involving Ixia-C",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		configs.Configure()
+		return nil
+	},
 	SilenceUsage: true,
 }
 
@@ -31,12 +32,15 @@ func Execute() {
 }
 
 func init() {
+	c := configs.GetCmdConfig()
+	rootCmd.PersistentFlags().BoolVarP(&c.Debug, "verbose", "v", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().StringVarP(&c.Config, "config", "c", c.Config, "Path to ixops config")
+
 	rootCmd.AddCommand(cluster.Cmd())
 	rootCmd.AddCommand(topology.Cmd())
 	rootCmd.AddCommand(images.Cmd())
 	rootCmd.AddCommand(diagnostics.Cmd())
 	rootCmd.AddCommand(tests.Cmd())
-	rootCmd.AddCommand(cfg.Cmd())
+	rootCmd.AddCommand(config.Cmd())
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().BoolVarP(&debug, "verbose", "v", false, "Enable verbose logging")
 }
