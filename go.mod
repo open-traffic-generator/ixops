@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/creasty/defaults v1.6.0
 	github.com/google/kne v0.1.1-0.20220602171531-3e14252d2039
+	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.21.2
@@ -34,7 +35,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/open-traffic-generator/ixia-c-operator v0.1.89 // indirect
-	github.com/rs/zerolog v1.27.0 // indirect
 	github.com/scrapli/scrapligo v0.1.1 // indirect
 	github.com/sirikothe/gotextfsm v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
