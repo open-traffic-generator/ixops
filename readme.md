@@ -25,7 +25,7 @@ The easiest way to manage emulated network topologies involving [Ixia-C](https:/
 - Generate test UDP traffic
 
     ```sh
-    ixops otg --pps 100 --count 500 --udp gen
+    ixops otg --pps 1000 --count 10000 --udp gen
     ```
 
 - Teardown topology as specified in configuration

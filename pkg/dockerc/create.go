@@ -38,6 +38,10 @@ func (d *DockerClient) CreateTrafficEngine(opts *TrafficEngineOpts) error {
 	}
 	log.Trace().Interface("opts", opts).Msg("Creating traffic-engine container")
 
+	if err := d.PullImage(opts.Image); err != nil {
+		return err
+	}
+
 	ctx := context.Background()
 	envs := []string{}
 	if !opts.HugePages {
@@ -84,6 +88,10 @@ func (d *DockerClient) CreateController(opts *ControllerOpts) error {
 		return fmt.Errorf("controller opts not provided")
 	}
 	log.Trace().Interface("opts", opts).Msg("Creating controller container")
+
+	if err := d.PullImage(opts.Image); err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	commands := []string{}

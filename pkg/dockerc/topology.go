@@ -1,9 +1,11 @@
 package dockerc
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/docker/docker/api/types"
 	"github.com/open-traffic-generator/ixops/pkg/configs"
 	"github.com/open-traffic-generator/ixops/pkg/interfaces"
 	"github.com/rs/zerolog/log"
@@ -135,13 +137,26 @@ func DeleteTopology(t *configs.Topology) error {
 		return fmt.Errorf("could not create docker client: %v", err)
 	}
 
-	if err := dc.DeleteContainer("ixia-c-controller"); err != nil {
-		return err
+	ctx := context.Background()
+	containers, err := dc.client.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		return fmt.Errorf("could not list containers: %v", err)
 	}
 
-	for _, ifc := range []string{ifcA, ifcZ} {
-		if err := dc.DeleteContainer(fmt.Sprintf("ixia-c-traffic-engine-%s", ifc)); err != nil {
-			return err
+	for _, c := range containers {
+		if c.Names[0] == "/ixia-c-controller" {
+			if err := dc.DeleteContainer("ixia-c-controller"); err != nil {
+				return err
+			}
+		}
+		for _, ifc := range []string{ifcA, ifcZ} {
+			cName := fmt.Sprintf("ixia-c-traffic-engine-%s", ifc)
+			if c.Names[0] == "/"+cName {
+				if err := dc.DeleteContainer(cName); err != nil {
+					return err
+				}
+			}
+
 		}
 	}
 

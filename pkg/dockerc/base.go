@@ -3,6 +3,8 @@ package dockerc
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -87,5 +89,17 @@ func (d *DockerClient) DeleteContainer(name string) error {
 		return fmt.Errorf("could not delete container %s: %v", j.ID, err)
 	}
 
+	return nil
+}
+
+func (d *DockerClient) PullImage(image string) error {
+	ctx := context.Background()
+	reader, err := d.client.ImagePull(ctx, image, types.ImagePullOptions{})
+	if err != nil {
+		return fmt.Errorf("could not pull %s: %v", image, err)
+	}
+
+	defer reader.Close()
+	io.Copy(os.Stdout, reader)
 	return nil
 }
