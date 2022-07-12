@@ -5,6 +5,8 @@ go 1.18
 require (
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/google/kne v0.1.1-0.20220602171531-3e14252d2039
+	github.com/open-traffic-generator/snappi/gosnappi v0.8.2
+	github.com/open-traffic-generator/tests v0.0.0-20220711102056-d8064caf6ba8
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -58,10 +60,10 @@ require (
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220322021311-435b647f9ef2 // indirect
-	google.golang.org/grpc v1.45.0 // indirect
+	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.8.0 // indirect
 	k8s.io/utils v0.0.0-20210527160623-6fdb442a123b // indirect
 	sigs.k8s.io/controller-runtime v0.9.2 // indirect

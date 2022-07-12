@@ -8,6 +8,7 @@ import (
 	"github.com/open-traffic-generator/ixops/cmd/config"
 	"github.com/open-traffic-generator/ixops/cmd/diagnostics"
 	"github.com/open-traffic-generator/ixops/cmd/images"
+	"github.com/open-traffic-generator/ixops/cmd/otg"
 	"github.com/open-traffic-generator/ixops/cmd/tests"
 	"github.com/open-traffic-generator/ixops/cmd/topology"
 	"github.com/open-traffic-generator/ixops/pkg/configs"
@@ -43,5 +44,6 @@ func init() {
 	rootCmd.AddCommand(diagnostics.Cmd())
 	rootCmd.AddCommand(tests.Cmd())
 	rootCmd.AddCommand(config.Cmd())
+	rootCmd.AddCommand(otg.Cmd())
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }

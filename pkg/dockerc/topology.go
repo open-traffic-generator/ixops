@@ -61,6 +61,7 @@ func getIfcPairAndEp(t *configs.Topology, ep *configs.Endpoint, ifcA *string, if
 }
 
 func CreateTopology(t *configs.Topology) error {
+	log.Info().Str("topology", *t.Name).Msg("Creating")
 	log.Trace().Interface("topoloy", t).Msg("Creating topology")
 	c := configs.GetAppConfig()
 
@@ -113,11 +114,12 @@ func CreateTopology(t *configs.Topology) error {
 		}
 	}
 
-	log.Info().Msg("Created topology")
+	log.Info().Str("topology", *t.Name).Msg("Successfully created")
 	return nil
 }
 
 func DeleteTopology(t *configs.Topology) error {
+	log.Info().Str("topology", *t.Name).Msg("Deleting")
 	log.Trace().Interface("topoloy", t).Msg("Deleting topology")
 	c := configs.GetAppConfig()
 	var ifcA string
@@ -149,6 +151,6 @@ func DeleteTopology(t *configs.Topology) error {
 		}
 	}
 
-	log.Info().Msg("Deleted topology")
+	log.Info().Str("topology", *t.Name).Msg("Successfully deleted")
 	return nil
 }
