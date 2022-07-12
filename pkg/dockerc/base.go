@@ -47,3 +47,45 @@ func (d *DockerClient) ListImages() error {
 
 	return nil
 }
+
+func (d *DockerClient) StopContainer(name string) error {
+	log.Debug().Str("name", name).Msg("Stopping container")
+	ctx := context.Background()
+
+	j, err := d.client.ContainerInspect(ctx, name)
+	if err != nil {
+		return fmt.Errorf("could not inspect container %s: %v", name, err)
+	}
+
+	if j.State.Running {
+		log.Debug().Msg("Container running, stopping it")
+		if err := d.client.ContainerStop(ctx, j.ID, nil); err != nil {
+			return fmt.Errorf("could not stop container %s: %v", j.ID, err)
+		}
+	}
+	log.Debug().Msg("Successfully stopped container")
+	return nil
+}
+
+func (d *DockerClient) DeleteContainer(name string) error {
+	log.Debug().Str("name", name).Msg("Deleting container")
+	ctx := context.Background()
+
+	j, err := d.client.ContainerInspect(ctx, name)
+	if err != nil {
+		return fmt.Errorf("could not inspect container %s: %v", name, err)
+	}
+
+	if j.State.Running {
+		log.Debug().Msg("Container running, stopping it")
+		if err := d.client.ContainerStop(ctx, j.ID, nil); err != nil {
+			return fmt.Errorf("could not stop container %s: %v", j.ID, err)
+		}
+	}
+
+	if err := d.client.ContainerRemove(ctx, j.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+		return fmt.Errorf("could not delete container %s: %v", j.ID, err)
+	}
+
+	return nil
+}

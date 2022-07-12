@@ -33,6 +33,6 @@ func (v *Topology) SetDefaults() {
 		v.Platform = &p
 	}
 	if v.Links == nil {
-		v.Links = &[]string{"otg:eth1 otg:eth2"}
+		v.Links = &[]string{"otg:veth1 otg:veth2"}
 	}
 }
