@@ -21,6 +21,10 @@ func NewClient(node *configs.Node) (*DockerClient, error) {
 
 	opts := []client.Opt{client.FromEnv, client.WithAPIVersionNegotiation()}
 	if node != nil {
+		// TODO: allow creating client for remote docker host
+		if *node.Host != "localhost" {
+			return nil, fmt.Errorf("creating docker client for remote host is currently not supported")
+		}
 		dc.Host = node.DockerHost()
 	}
 	c, err := client.NewClientWithOpts(opts...)

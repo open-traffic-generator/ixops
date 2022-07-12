@@ -13,13 +13,37 @@ type CmdConfig struct {
 	Quiet  bool   `yaml:"quiet"`
 	Config string `yaml:"config"`
 }
+
 type AppConfig struct {
-	IxiaC *IxiaC  `yaml:"ixia_c" default:"{}"`
-	Nodes []*Node `yaml:"nodes" default:"[{\"master\": true}]"`
+	Topologies *[]*Topology `yaml:"topologies"`
+	Endpoints  *[]*Endpoint `yaml:"endpoints"`
+	Nodes      *[]*Node     `yaml:"nodes"`
 }
 
-type IxiaC struct {
-	Release string `yaml:"release" default:"latest"`
+func (v *AppConfig) SetDefaults() {
+	if v.Topologies == nil {
+		p := &Topology{}
+		v.Topologies = &[]*Topology{p}
+	}
+	for _, p := range *v.Topologies {
+		p.SetDefaults()
+	}
+	if v.Endpoints == nil {
+		p := &Endpoint{}
+		p.SetDefaults()
+		v.Endpoints = &[]*Endpoint{p}
+	}
+	for _, p := range *v.Endpoints {
+		p.SetDefaults()
+	}
+	if v.Nodes == nil {
+		p := &Node{}
+		p.SetDefaults()
+		v.Nodes = &[]*Node{p}
+	}
+	for _, p := range *v.Nodes {
+		p.SetDefaults()
+	}
 }
 
 func (c *CmdConfig) String() string {

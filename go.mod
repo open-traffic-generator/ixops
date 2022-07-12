@@ -3,7 +3,6 @@ module github.com/open-traffic-generator/ixops
 go 1.18
 
 require (
-	github.com/creasty/defaults v1.6.0
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/google/kne v0.1.1-0.20220602171531-3e14252d2039
 	github.com/rs/zerolog v1.27.0

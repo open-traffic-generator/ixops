@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/creasty/defaults"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
@@ -18,9 +17,7 @@ func LoadFromBytes(bytes []byte) (*AppConfig, error) {
 		return nil, fmt.Errorf("could not unmarshal config bytes: %v", err)
 	}
 
-	if err := defaults.Set(&c); err != nil {
-		return nil, fmt.Errorf("could not set defaults for config: %v", err)
-	}
+	c.SetDefaults()
 
 	return &c, nil
 }

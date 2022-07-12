@@ -11,7 +11,7 @@ var getCmd = &cobra.Command{
 	Short: "Get container images",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := configs.GetAppConfig()
-		d, err := dockerc.NewClient(c.Nodes[0])
+		d, err := dockerc.NewClient((*c.Nodes)[0])
 		if err != nil {
 			return err
 		}
