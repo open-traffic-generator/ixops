@@ -10,6 +10,7 @@ var appConfig *AppConfig
 type CmdConfig struct {
 	Home   string `yaml:"home"`
 	Debug  bool   `yaml:"debug"`
+	Quiet  bool   `yaml:"quiet"`
 	Config string `yaml:"config"`
 }
 type AppConfig struct {
@@ -19,12 +20,6 @@ type AppConfig struct {
 
 type IxiaC struct {
 	Release string `yaml:"release" default:"latest"`
-}
-
-type Node struct {
-	Ip     string `yaml:"ip" default:"localhost"`
-	Port   uint   `yaml:"port" default:"22"`
-	Master bool   `yaml:"master" default:"false"`
 }
 
 func (c *CmdConfig) String() string {
