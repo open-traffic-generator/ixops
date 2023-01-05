@@ -274,13 +274,70 @@ kind_get_metallb() {
     && kubectl apply -f ${IXOPS_HOME}/metallb.yaml
 }
 
+get_meshnet() {
+    inf "Installing meshnet-cni ${MESHNET_REPO} (${MESHNET_COMMIT}) ..."
+    rm -rf ${MESHNET_HOME}
+    oldpwd=${PWD}
+    cd ${IXOPS_HOME}
+
+    applydir=manifests/base
+    if [ "${MESHNET_LINK}" = "GRPC" ]
+    then
+        applydir=manifests/overlays/grpc-link
+    fi
+
+    git clone ${MESHNET_REPO} && cd ${MESHNET_HOME} && git checkout ${MESHNET_COMMIT} \
+    && cat manifests/base/daemonset.yaml | sed "s#image: networkop/meshnet:latest#image: ${MESHNET_IMAGE}#g" | tee manifests/base/daemonset.yaml.patched > /dev/null \
+    && mv manifests/base/daemonset.yaml.patched manifests/base/daemonset.yaml \
+    && kubectl apply -k ${applydir} \
+    && wait_for_pods meshnet \
+    && cd ${oldpwd}
+}
+
+get_metrics_server() {
+    [ "${METRICS_SERVER_ENABLE}" != true ] && return 0
+    inf "Installing metrics server ${METRICS_SERVER_YAML} ..."
+    oldpwd=${PWD}
+    cd ${IXOPS_HOME} && rm -rf metrics-server.yaml
+    curl -kL -o metrics-server.yaml ${METRICS_SERVER_YAML} \
+    && cat metrics-server.yaml | sed 's/- args:/- args:\n        - --kubelet-insecure-tls/g' | tee metrics-server.yaml.patched > /dev/null \
+    && mv metrics-server.yaml.patched metrics-server.yaml \
+    && kubectl apply -f metrics-server.yaml \
+    && cd ${oldpwd}
+}
+
+rm_metrics_server() {
+    [ -f "${IXOPS_HOME}/metrics-server.yaml" ] || return 0
+    inf "Removing metrics server ${METRICS_SERVER_YAML} ..."
+    kubectl delete -f "${IXOPS_HOME}/metrics-server.yaml" \
+    && rm -rf "${IXOPS_HOME}/metrics-server.yaml"
+}
+
+get_ixia_c_operator() {
+    inf "Installing ixia-c-operator ${IXIA_C_OPERATOR_YAML} ..."
+    kubectl apply -f ${IXIA_C_OPERATOR_YAML} \
+    && wait_for_pods ixiatg-op-system
+}
+
+rm_ixia_c_operator() {
+    inf "Removing ixia-c-operator ${IXIA_C_OPERATOR_YAML} ..."
+    kubectl delete -f ${IXIA_C_OPERATOR_YAML} \
+    && wait_for_no_namespace ixiatg-op-system
+}
+
 setup_kind() {
     inf "Setting up kind cluster ..."
     setup_docker \
     && get_kind \
     && kind_create_cluster \
     && kind_get_kubectl \
-    && kind_get_metallb
+    && kind_get_metallb \
+    && get_meshnet \
+    && get_metrics_server \
+    && get_ixia_c_operator \
+    && kubectl get pods -A
+
+    inf "Please logout, login again (if any binary got installed) !" "\n"
 }
 
 setup() {
