@@ -44,7 +44,7 @@ KIND_NODE_COUNT=1
 KNE_REPO=https://github.com/openconfig/kne.git
 KNE_COMMIT=v0.1.7
 KNE_HOME="${IXOPS_HOME}/kne"
-KNE_CLI="${KNE_HOME}/kne"
+KNE_CLI="kne"
 KNE_VERBOSITY="debug"
 ### KNE VARIABLES END
 
