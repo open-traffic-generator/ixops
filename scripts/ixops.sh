@@ -40,6 +40,13 @@ KIND_VERSION=v0.17.0
 KIND_NODE_COUNT=1
 ### KIND VARIABLES END
 
+### KNE VARIABLES START
+KNE_REPO=https://github.com/openconfig/kne.git
+KNE_COMMIT=v0.1.7
+KNE_HOME="${IXOPS_HOME}/kne"
+KNE_CLI="${KNE_HOME}/kne"
+KNE_VERBOSITY="debug"
+### KNE VARIABLES END
 
 inf() {
     echo "${2}\033[1;32m${1}\033[0m${2}"
@@ -124,6 +131,34 @@ wait_for_pods() {
     done
 }
 
+wait_for_no_namespace() {
+    start=$SECONDS
+    inf "Waiting for namespace ${1} to be deleted (timeout=${TIMEOUT_SECONDS}s)..."
+    while true
+    do
+        found=""
+        for n in $(kubectl get namespaces -o 'jsonpath={.items[*].metadata.name}')
+        do
+            if [ "$1" = "$n" ]
+            then
+                found="$n"
+                break
+            fi
+        done
+
+        if [ -z "$found" ]
+        then
+            return 0
+        fi
+
+        elapsed=$(( SECONDS - start ))
+        if [ $elapsed -gt ${TIMEOUT_SECONDS} ]
+        then
+            err "Namespace ${1} not deleted after ${TIMEOUT_SECONDS}s" 1
+        fi
+    done
+}
+
 check_platform() {
     grep "Ubuntu" /etc/os-release > /dev/null 2>&1 || err "This operation is only supported on Ubuntu" 1
 }
@@ -172,6 +207,11 @@ apt_install_ca_certs() {
     apt_install ca-certificates
 }
 
+apt_install_make() {
+    make -v > /dev/null 2>&1 && return
+    apt_install make
+}
+
 apt_install_pkgs() {
     uname -a | grep -i linux > /dev/null 2>&1 || return 0
     inf "Installing apt packages that are not already installed ..."
@@ -180,7 +220,8 @@ apt_install_pkgs() {
     && apt_install_git \
     && apt_install_lsb_release \
     && apt_install_gnupg \
-    && apt_install_ca_certs
+    && apt_install_ca_certs \
+    && apt_install_make
 }
 
 mk_ixops_home() {
@@ -192,7 +233,8 @@ setup_ixops_home() {
 }
 
 common_setup() {
-    setup_ixops_home \
+    check_platform \
+    && setup_ixops_home \
     && apt_install_pkgs \
     && get_go
 }
@@ -325,19 +367,201 @@ rm_ixia_c_operator() {
     && wait_for_no_namespace ixiatg-op-system
 }
 
-setup_kind() {
+get_kne() {
+    which ${KNE_CLI} > /dev/null 2>&1 && return
+    inf "Installing KNE ${KNE_REPO} (${KNE_COMMIT}) ..."
+    rm -rf ${KNE_HOME}
+    oldpwd=${PWD}
+    mk_ixops_home
+    cd ${IXOPS_HOME}
+    git clone ${KNE_REPO} && cd ${KNE_HOME} && git checkout ${KNE_COMMIT} && make install && cd ${oldpwd}
+}
+
+setup_kind_kne() {
+    inf "Setting up prerequisites for KNE ..."
+    kind_get_metallb \
+    && get_meshnet \
+    && get_ixia_c_operator \
+    && kubectl get pods -A \
+    && get_kne
+}
+
+setup_kind_k8s() {
+    inf "Setting up prerequisites for K8S ..."
+    kind_get_metallb \
+    && get_meshnet \
+    && kubectl get pods -A
+}
+
+setup_kind_cluster() {
     inf "Setting up kind cluster ..."
     setup_docker \
     && get_kind \
     && kind_create_cluster \
     && kind_get_kubectl \
-    && kind_get_metallb \
-    && get_meshnet \
     && get_metrics_server \
-    && get_ixia_c_operator \
     && kubectl get pods -A
+}
 
-    inf "Please logout, login again (if any binary got installed) !" "\n"
+teardown_kind_cluster() {
+    inf "Tearing down kind cluster ..."
+    kind delete cluster 2> /dev/null
+    rm -rf $HOME/.kube
+}
+
+setup_kind() {
+    [ -z "${1}" ] && cluster=kne || cluster=${1}
+
+    case $1 in
+        kne )
+            setup_kind_cluster \
+            && setup_kind_kne
+        ;;
+        k8s )
+            setup_kind_cluster \
+            && setup_kind_k8s
+        ;;
+        *   )
+            err "unsupported cluster type: ${1}" 1
+        ;;
+    esac
+}
+
+teardown_kind() {
+    check_platform \
+    && teardown_kind_cluster
+}
+
+setup_gcp() {
+    err "unimplemented" 1
+}
+
+mk_ixia_c_config_map() {
+    yml='apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: ixiatg-release-config
+          namespace: ixiatg-op-system
+        data:
+          versions: |
+            {
+            "release": "local",
+            "images": [
+                    {
+                        "name": "controller",
+                        "path": "ghcr.io/open-traffic-generator/licensed/ixia-c-controller",
+                        "tag": "0.0.1-3698"
+                    },
+                    {
+                        "name": "gnmi-server",
+                        "path": "ghcr.io/open-traffic-generator/ixia-c-gnmi-server",
+                        "tag": "1.10.5"
+                    },
+                    {
+                        "name": "traffic-engine",
+                        "path": "ghcr.io/open-traffic-generator/ixia-c-traffic-engine",
+                        "tag": "1.6.0.19"
+                    },
+                    {
+                        "name": "protocol-engine",
+                        "path": "ghcr.io/open-traffic-generator/licensed/ixia-c-protocol-engine",
+                        "tag": "1.00.0.252"
+                    }
+                ]
+            }
+        '
+    
+    echo "${yml}"
+}
+
+kne_topo_file() {
+    [ -f "${1}" ] && echo ${1} || echo "${IXIA_C_HOME}/${1}.kne.yaml"
+}
+
+mk_kne_topo_otg_b2b() {
+    echo "name: otg-b2b
+        nodes:
+          - name: otg
+            type: IXIA_TG
+            version: ${IXIA_C_RELEASE}
+            services:
+              8443:
+                name: https
+                inside: 8443
+              40051:
+                name: grpc
+                inside: 40051
+              50051:
+                name: gnmi
+                inside: 50051
+        links:
+          - a_node: otg
+            a_int: eth1
+            z_node: otg
+            z_int: eth2
+        "
+}
+
+mk_kne_topo() {
+    inf "Making KNE topology file for ${1} ..."
+    case $1 in
+        otg-b2b     )
+            yml=$(mk_kne_topo_otg_b2b)
+        ;;
+        otg-dut-otg )
+            err "unimplemented" 1
+        ;;
+        *   )
+            if [ -f "${1}" ]
+            then
+                wrn "${1} is a user provided file"
+                return
+            fi
+            err "unsupported kne topo type: ${1}" 1
+        ;;
+    esac
+
+    echo "$yml" | sed "s/^        //g" | tee $(kne_topo_file $1) > /dev/null
+}
+
+set_ixia_c_config_map() {
+    [ -f "${1}" ] && conf=$(echo ${1}) || conf=$(mk_ixia_c_config_map | sed "s/^        //g")
+    echo ${mk_ixia_c_config_map} | kubectl apply -f -
+}
+
+get_topo_namespace() {
+    grep -E "^name" "${1}" | cut -d\  -f2 | sed -e s/\"//g
+}
+
+kne_cli() {
+    ${KNE_CLI} -v ${KNE_VERBOSITY} $@
+}
+
+newtopo_kne() {
+    inf "Intiating KNE topology creation ..."
+    mk_kne_topo "${1}" || exit 1
+
+    topo=$(kne_topo_file $1)
+    namespace=$(get_topo_namespace ${topo})
+
+    # if release is set to local or path to ixia config map has been provided
+    if [ "${IXIA_C_RELEASE}" = "local" ] || [ -f "${2}" ]
+    then
+        set_ixia_c_config_map ${2} || exit 1
+    fi
+
+    kne_cli create ${topo} \
+    && wait_for_pods ${namespace}
+}
+
+rmtopo_kne() {
+    inf "Intiating KNE topology deletion ..."
+
+    topo=$(kne_topo_file $1)
+    namespace=$(get_topo_namespace ${topo})
+
+    kne_cli delete ${topo} \
+    && wait_for_no_namespace ${namespace}
 }
 
 setup() {
@@ -348,36 +572,55 @@ setup() {
 
     case $1 in
         docker  )
-            setup_kind
+            setup_docker
         ;;
         kind    )
-            setup_kind
+            setup_kind ${2}
         ;;
         gcp    )
-            setup_kind
+            setup_gcp
         ;;
         *   )
-            err "unsupported image type: ${1}"
+            err "unsupported image type: ${1}" 1
         ;;
     esac
+
+    inf "Please logout, login again (if any binary got installed) !" "\n"
 }
 
 teardown() {
     [ -z "${1}" ] && platform=docker || platform=${1}
 
     inf "Initiating Teardown" "\n"
+
+    case $1 in
+        docker  )
+            err "unimplemented" 1
+        ;;
+        kind    )
+            teardown_kind
+        ;;
+        gcp    )
+            err "unimplemented" 1
+        ;;
+        *   )
+            err "unsupported image type: ${1}" 1
+        ;;
+    esac
 }
 
 newtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
     inf "Initiating Topology Creation" "\n"
+    newtopo_kne
 }
 
 rmtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
     inf "Initiating Topology Deletion" "\n"
+    rmtopo_kne
 }
 
 help() {
