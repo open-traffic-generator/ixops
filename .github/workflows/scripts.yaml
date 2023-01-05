@@ -11,7 +11,9 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup
-        run: ./scripts/ixops.sh setup kind kne
+        run: |
+          ./scripts/ixops.sh setup kind kne
+          ./scripts/ixops.sh setup kind kne
 
       - name: Create Topology
         run: ./scripts/ixops.sh newtopo otg-b2b

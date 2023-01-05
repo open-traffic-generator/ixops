@@ -1,6 +1,7 @@
 #!/bin/sh
 
-export PATH=$PATH:/usr/local/go/bin:/home/$(whoami)/go/bin
+CURRENT_USER=$(whoami)
+export PATH=$PATH:/usr/local/go/bin:/home/${CURRENT_USER}/go/bin
 
 # source path for current session
 . $HOME/.profile
@@ -51,6 +52,76 @@ wrn() {
 err() {
     echo "\n\033[1;31m${1}\033[0m\n"
     [ ! -z ${2} ] && exit ${2}
+}
+
+mk_kind_config() {
+    yml="kind: Cluster
+        apiVersion: kind.x-k8s.io/v1alpha4
+        networking:
+          # WARNING: It is _strongly_ recommended that you keep this the default
+          # (127.0.0.1) for security reasons. However it is possible to change this.
+          # Change to 0.0.0.0 to access kind cluster from outside
+          apiServerAddress: 127.0.0.1
+          # By default the API server listens on a random open port.
+          # You may choose a specific port but probably don't need to in most cases.
+          # Using a random port makes it easier to spin up multiple clusters.
+          apiServerPort: 6443
+        nodes:
+          # configure single-node cluster
+          - role: control-plane
+          # replicate following for multi-node cluster with intended number of worker nodes
+          # - role: worker
+        "
+    echo "$yml" | sed "s/^        //g" | tee ${IXOPS_HOME}/kind.yaml > /dev/null
+
+    for i in $(seq 2 ${KIND_NODE_COUNT})
+    do
+        echo "  - role: worker" >> ${IXOPS_HOME}/kind.yaml
+    done
+}
+
+mk_metallb_config() {
+    prefix=$(docker network inspect -f '{{.IPAM.Config}}' kind | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+" | tail -n 1)
+
+    yml="apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata:
+          name: kne-pool
+          namespace: metallb-system
+        spec:
+          addresses:
+            - ${prefix}.100 - ${prefix}.250
+
+        ---
+        apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata:
+          name: kne-l2-adv
+          namespace: metallb-system
+        spec:
+          ipAddressPools:
+            - kne-pool
+    "
+    echo "$yml" | sed "s/^        //g" | tee ${IXOPS_HOME}/metallb.yaml > /dev/null
+}
+
+wait_for_pods() {
+    for n in $(kubectl get namespaces -o 'jsonpath={.items[*].metadata.name}')
+    do
+        if [ ! -z "$1" ] && [ "$1" != "$n" ]
+        then
+            continue
+        fi
+        for p in $(kubectl get pods -n ${n} -o 'jsonpath={.items[*].metadata.name}')
+        do
+            if [ ! -z "$2" ] && [ "$2" != "$p" ]
+            then
+                continue
+            fi
+            inf "Waiting for pod/${p} in namespace ${n} (timeout=${TIMEOUT_SECONDS}s)..."
+            kubectl wait -n ${n} pod/${p} --for condition=ready --timeout=${TIMEOUT_SECONDS}s
+        done
+    done
 }
 
 check_platform() {
@@ -120,6 +191,12 @@ setup_ixops_home() {
     mk_ixops_home
 }
 
+common_setup() {
+    setup_ixops_home \
+    && apt_install_pkgs \
+    && get_go
+}
+
 get_go() {
     which go > /dev/null 2>&1 && return
     inf "Installing Go ${GO_VERSION} ..."
@@ -130,35 +207,120 @@ get_go() {
     && go version
 }
 
-common_setup() {
-    setup_ixops_home \
-    && apt_install_pkgs \
-    && get_go
+get_docker() {
+    which docker > /dev/null 2>&1 && return
+    inf "Installing docker ..."
+    sudo apt-get remove docker docker-engine docker.io containerd runc 2> /dev/null
+
+    curl -kfsSL https://download.docker.com/linux/ubuntu/gpg \
+        | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt-get update \
+    && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+}
+
+sudo_docker() {
+    groups | grep docker > /dev/null 2>&1 && return
+    sudo groupadd docker
+    sudo usermod -aG docker $CURRENT_USER
+
+    sudo docker version
+    inf "Please logout, login again and re-execute previous command" "\n"
+    exit 0
+}
+
+setup_docker() {
+    get_docker \
+    && sudo_docker
+}
+
+get_kind() {
+    which kind > /dev/null 2>&1 && return
+    inf "Installing kind ${KIND_VERSION} ..."
+    go install sigs.k8s.io/kind@${KIND_VERSION}
+}
+
+kind_cluster_exists() {
+    kind get clusters | grep kind > /dev/null 2>&1
+}
+
+kind_create_cluster() {
+    kind_cluster_exists && return
+    inf "Creating kind cluster ..."
+    mk_kind_config \
+    && kind create cluster --config=${IXOPS_HOME}/kind.yaml --wait ${TIMEOUT_SECONDS}s
+}
+
+kind_get_kubectl() {
+    inf "Copying kubectl from kind cluster to host ..."
+    rm -rf kubectl
+    docker cp kind-control-plane:/usr/bin/kubectl ./ \
+    && sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+    && sudo cp -r $HOME/.kube /root/ \
+    && rm -rf kubectl
+}
+
+kind_get_metallb() {
+    inf "Setting up metallb ..."
+
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml \
+    && wait_for_pods metallb-system \
+    && mk_metallb_config \
+    && inf "Applying metallb config map for exposing internal services via public IP addresses ..." \
+    && cat ${IXOPS_HOME}/metallb.yaml \
+    && kubectl apply -f ${IXOPS_HOME}/metallb.yaml
+}
+
+setup_kind() {
+    inf "Setting up kind cluster ..."
+    setup_docker \
+    && get_kind \
+    && kind_create_cluster \
+    && kind_get_kubectl \
+    && kind_get_metallb
 }
 
 setup() {
     [ -z "${1}" ] && platform=docker || platform=${1}
 
-    inf "+++++ setup +++++" "\n"
-    common_setup
+    inf "Initiating Setup" "\n"
+    common_setup || exit 1
+
+    case $1 in
+        docker  )
+            setup_kind
+        ;;
+        kind    )
+            setup_kind
+        ;;
+        gcp    )
+            setup_kind
+        ;;
+        *   )
+            err "unsupported image type: ${1}"
+        ;;
+    esac
 }
 
 teardown() {
     [ -z "${1}" ] && platform=docker || platform=${1}
 
-    inf "+++++ teardown +++++" "\n"
+    inf "Initiating Teardown" "\n"
 }
 
 newtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
-    inf "+++++ newtopo +++++" "\n"
+    inf "Initiating Topology Creation" "\n"
 }
 
 rmtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
-    inf "+++++ rmtopo +++++" "\n"
+    inf "Initiating Topology Deletion" "\n"
 }
 
 help() {
