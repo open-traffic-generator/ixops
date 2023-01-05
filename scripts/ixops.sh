@@ -537,12 +537,13 @@ kne_cli() {
     ${KNE_CLI} -v ${KNE_VERBOSITY} $@
 }
 
-newtopo_kne() {
+ctop_kne() {
     inf "Intiating KNE topology creation ..."
     mk_kne_topo "${1}" || exit 1
 
     topo=$(kne_topo_file $1)
     namespace=$(get_topo_namespace ${topo})
+    inf "Using topology ${topo} with namespace ${namespace}"
 
     # if release is set to local or path to ixia config map has been provided
     if [ "${IXIA_C_RELEASE}" = "local" ] || [ -f "${2}" ]
@@ -554,11 +555,12 @@ newtopo_kne() {
     && wait_for_pods ${namespace}
 }
 
-rmtopo_kne() {
+dtop_kne() {
     inf "Intiating KNE topology deletion ..."
 
     topo=$(kne_topo_file $1)
     namespace=$(get_topo_namespace ${topo})
+    inf "Using topology ${topo} with namespace ${namespace}"
 
     kne_cli delete ${topo} \
     && wait_for_no_namespace ${namespace}
@@ -609,18 +611,18 @@ teardown() {
     esac
 }
 
-newtopo() {
+ctop() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
     inf "Initiating Topology Creation" "\n"
-    newtopo_kne
+    ctop_kne ${topo}
 }
 
-rmtopo() {
+dtop() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
     inf "Initiating Topology Deletion" "\n"
-    rmtopo_kne
+    dtop_kne ${topo}
 }
 
 help() {
@@ -628,8 +630,8 @@ help() {
     wrn "Usage ./ixops.sh [subcommand]: "
     echo "setup [docker|kind|gcp] [kne|clab|k8s]    -   Setup prerequisites for a given platform (default=docker)"
     echo "teardown [docker|kind|gcp]                -   Teardown given platform (default=docker)"
-    echo "newtopo [otg-b2b|otg-dut-otg|<topo-file>] -   Create emulated topology (default=otg-b2b)"
-    echo "rmtopo [otg-b2b|otg-dut-otg|<topo-file>]  -   Delete emulated topology (default=otg-b2b)"
+    echo "ctop [otg-b2b|otg-dut-otg|<topo-file>]    -   Create emulated topology (default=otg-b2b)"
+    echo "dtop [otg-b2b|otg-dut-otg|<topo-file>]    -   Delete emulated topology (default=otg-b2b)"
     echo "\n"
     
     wrn "Notes:"
