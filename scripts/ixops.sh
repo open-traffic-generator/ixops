@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PATH=$PATH:/usr/local/go/bin:/home/$(logname)/go/bin
+export PATH=$PATH:/usr/local/go/bin:/home/$(whoami)/go/bin
 
 # source path for current session
 . $HOME/.profile
@@ -139,26 +139,26 @@ common_setup() {
 setup() {
     [ -z "${1}" ] && platform=docker || platform=${1}
 
-    wrn "+++++ setup +++++" "\n"
+    inf "+++++ setup +++++" "\n"
     common_setup
 }
 
 teardown() {
     [ -z "${1}" ] && platform=docker || platform=${1}
 
-    wrn "+++++ teardown +++++" "\n"
+    inf "+++++ teardown +++++" "\n"
 }
 
 newtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
-    wrn "+++++ newtopo +++++" "\n"
+    inf "+++++ newtopo +++++" "\n"
 }
 
 rmtopo() {
     [ -z "${1}" ] && topo=otg-b2b || topo=${1}
 
-    wrn "+++++ rmtopo +++++" "\n"
+    inf "+++++ rmtopo +++++" "\n"
 }
 
 help() {
