@@ -1,0 +1,23 @@
+name: Scripts CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup
+        run: ./scripts/ixops.sh setup kind kne
+
+      - name: Create Topology
+        run: ./scripts/ixops.sh newtopo otg-b2b
+
+      - name: Delete Topology
+        run: ./scripts/ixops.sh rmtopo otg-b2b
+
+      - name: Teardown
+        run: ./scripts/ixops.sh teardown kind
