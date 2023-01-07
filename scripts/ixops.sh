@@ -482,7 +482,7 @@ mk_kne_topo_otg_b2b() {
     echo "name: otg-b2b
         nodes:
           - name: otg
-            type: IXIA_TG
+            vendor: KEYSIGHT
             version: ${IXIA_C_RELEASE}
             services:
               8443:
