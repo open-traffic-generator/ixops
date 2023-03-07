@@ -34,7 +34,7 @@ func Execute() {
 
 func init() {
 	c := configs.GetCmdConfig()
-	rootCmd.PersistentFlags().BoolVarP(&c.Debug, "verbose", "v", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&c.Debug, "verbose", "v", true, "Enable verbose logging")
 	rootCmd.PersistentFlags().BoolVarP(&c.Quiet, "quiet", "q", false, "Disable logging")
 	rootCmd.PersistentFlags().StringVarP(&c.Config, "config", "c", c.Config, "Path to ixops config")
 
