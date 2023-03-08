@@ -21,4 +21,4 @@ jobs:
       # - name: Unit Test
       #   run: go test -v ./...
       - name: Install All Packages
-        run: ./ixops -v install all
+        run: ./ixops -v pkg install all
