@@ -73,7 +73,7 @@ func (e *executor) Exec(commands []string) Executor {
 }
 
 func (e *executor) BashExec(command string) Executor {
-	return e.Exec([]string{"bash", "-c", command})
+	return e.Exec([]string{"bash", "-lc", command})
 }
 
 func (e *executor) Clear() Executor {

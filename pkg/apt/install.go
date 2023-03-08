@@ -3,6 +3,8 @@ package apt
 import (
 	"fmt"
 	"os"
+	"path"
+	"runtime"
 
 	"github.com/rs/zerolog/log"
 )
@@ -136,6 +138,69 @@ func (a *aptInstaller) InstallDocker() error {
 
 	if err := a.AddUserToDockerGroup(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (a *aptInstaller) GoTarLink(version string) (string, error) {
+	if version == "" {
+		// TODO: get default Go version from config
+		version = "1.20"
+	}
+	link := "https://dl.google.com/go/go%s.linux-%s.tar.gz"
+	switch arch := runtime.GOARCH; arch {
+	case "amd64":
+		return fmt.Sprintf(link, version, arch), nil
+	default:
+		return "", fmt.Errorf("go installation not supported on %s architecture", arch)
+	}
+}
+
+func (a *aptInstaller) InstallGo(version string) error {
+	checkCmd := "go version"
+
+	if a.CheckCmd(checkCmd) == nil {
+		log.Trace().Msg("Skipping Go installation")
+		return nil
+	}
+
+	log.Info().Str("version", version).Msg("Installing Go")
+	log.Trace().Msg("Getting Go tar link")
+	tarLink, err := a.GoTarLink(version)
+	if err != nil {
+		return fmt.Errorf("could not get Go tar link: %v", err)
+	}
+	log.Trace().Str("tarLink", tarLink).Msg("Got Go tar link")
+
+	log.Trace().Msg("Setting up base directory for Go installation")
+	homeLocal, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("could not get user home dir: %v", err)
+	}
+	homeLocal = path.Join(homeLocal, ".local")
+	if err := os.MkdirAll(homeLocal, os.ModePerm); err != nil {
+		return fmt.Errorf("directory creation for %s failed: %v", homeLocal, err)
+	}
+
+	if err := a.UninstallGo(); err != nil {
+		return err
+	}
+
+	log.Trace().Msg("Downloading and extracting Go tar")
+	cmd := fmt.Sprintf("curl -kL %s | tar -C %s -xzf -", tarLink, homeLocal)
+	if err := a.executor.Clear().BashExec(cmd).Err(); err != nil {
+		return fmt.Errorf("Could not download and extract Go tar: %v", a.executor.StderrLines())
+	}
+
+	log.Trace().Msg("Setting up Go paths")
+	cmd = "echo 'export PATH=$PATH:$HOME/.local/go/bin:$HOME/go/bin' >> ${HOME}/.profile"
+	if err := a.executor.Clear().BashExec(cmd).Err(); err != nil {
+		return fmt.Errorf("Could not set up Go paths: %v", a.executor.StderrLines())
+	}
+
+	if err := a.CheckCmd(checkCmd); err != nil {
+		return fmt.Errorf("post install check for Go failed: %v", err)
 	}
 
 	return nil

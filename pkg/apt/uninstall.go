@@ -23,3 +23,14 @@ func (a *aptInstaller) UninstallPackages(pkgNames []string) error {
 	log.Info().Strs("pkgNames", pkgNames).Msg("Successfully uninstalled packages")
 	return nil
 }
+
+func (a *aptInstaller) UninstallGo() error {
+	log.Trace().Msg("Uninstalling existing Go")
+
+	cmd := "rm -rf ${HOME}/.local/go ${HOME}/go"
+	if err := a.executor.Clear().BashExec(cmd).Err(); err != nil {
+		return fmt.Errorf("could not uninstall existing Go: %v", a.executor.StderrLines())
+	}
+
+	return nil
+}

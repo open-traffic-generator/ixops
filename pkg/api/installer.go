@@ -13,4 +13,7 @@ type PackageInstaller interface {
 	InstallGnupg() error
 	InstallCaCertificates() error
 	InstallDocker() error
+	InstallGo(string) error
+
+	UninstallGo() error
 }

@@ -20,6 +20,7 @@ const (
 	PackageNameGnupg          PackageName = "gnupg"
 	PackageNameCaCertificates PackageName = "ca-certificates"
 	PackageNameDocker         PackageName = "docker"
+	PackageNameGo             PackageName = "go"
 )
 
 func installAllPackages() error {
@@ -43,6 +44,9 @@ func installAllPackages() error {
 		return err
 	}
 	if err := a.InstallDocker(); err != nil {
+		return err
+	}
+	if err := a.InstallGo(""); err != nil {
 		return err
 	}
 	return nil
@@ -73,6 +77,8 @@ func InstallPackage(name string, version string) error {
 		return installer.InstallCaCertificates()
 	case PackageNameDocker:
 		return installer.InstallDocker()
+	case PackageNameGo:
+		return installer.InstallGo(version)
 	default:
 		return fmt.Errorf("unsupported package %s", name)
 	}
@@ -80,5 +86,11 @@ func InstallPackage(name string, version string) error {
 
 func UninstallPackage(name string) error {
 	log.Info().Str("name", name).Msg("Uninstalling package")
-	return fmt.Errorf("unimplemented operation")
+	installer := apt.NewInstaller()
+	switch PackageName(name) {
+	case PackageNameGo:
+		return installer.UninstallGo()
+	default:
+		return fmt.Errorf("unsupported package %s", name)
+	}
 }
