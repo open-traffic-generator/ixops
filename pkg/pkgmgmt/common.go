@@ -19,6 +19,7 @@ const (
 	PackageNameLsbRelease     PackageName = "lsb_release"
 	PackageNameGnupg          PackageName = "gnupg"
 	PackageNameCaCertificates PackageName = "ca-certificates"
+	PackageNameDocker         PackageName = "docker"
 )
 
 func installAllPackages() error {
@@ -41,7 +42,9 @@ func installAllPackages() error {
 	if err := a.InstallCaCertificates(); err != nil {
 		return err
 	}
-
+	if err := a.InstallDocker(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -68,6 +71,8 @@ func InstallPackage(name string, version string) error {
 		return installer.InstallGnupg()
 	case PackageNameCaCertificates:
 		return installer.InstallCaCertificates()
+	case PackageNameDocker:
+		return installer.InstallDocker()
 	default:
 		return fmt.Errorf("unsupported package %s", name)
 	}

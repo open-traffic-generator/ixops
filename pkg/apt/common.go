@@ -52,6 +52,24 @@ func (a *aptInstaller) Install(packages []string) error {
 	return nil
 }
 
+func (a *aptInstaller) Uninstall(packages []string) error {
+	log.Info().Strs("packages", packages).Msg("Performing apt-get remove")
+
+	cmd := fmt.Sprintf(
+		"DEBIAN_FRONTEND=noninteractive apt-get remove -yq %s",
+		strings.Join(packages, " "),
+	)
+	if a.useSudo {
+		cmd = "sudo " + cmd
+	}
+
+	if err := a.executor.Clear().BashExec(cmd).Err(); err != nil {
+		return fmt.Errorf("Could not perform apt-get remove: %v", a.executor.StderrLines())
+	}
+
+	return nil
+}
+
 func (a *aptInstaller) Update() error {
 	if !a.update {
 		log.Trace().Msg("Skipping apt-get update")

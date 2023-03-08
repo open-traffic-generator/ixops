@@ -40,7 +40,7 @@ func (e *executor) logOutput(outType string) {
 
 	if log.Trace().Enabled() {
 		for _, line := range lines {
-			log.Trace().Str(outType, "").Msg(line)
+			log.Trace().Str(outType, line).Msg("")
 		}
 	}
 }
