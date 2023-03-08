@@ -2,9 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   build:
@@ -23,4 +21,4 @@ jobs:
       # - name: Unit Test
       #   run: go test -v ./...
       - name: Install All Packages
-        run: ./ixops install all
+        run: ./ixops -v install all
