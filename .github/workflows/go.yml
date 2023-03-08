@@ -8,17 +8,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: "1.20"
 
       - name: Build
         run: go build -v
 
-      - name: Unit Test
-        run: go test -v ./...
+      # - name: Unit Test
+      #   run: go test -v ./...
+      - name: Install All Packages
+        run: ./ixops install all

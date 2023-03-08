@@ -9,6 +9,7 @@ import (
 	"github.com/open-traffic-generator/ixops/cmd/diagnostics"
 	"github.com/open-traffic-generator/ixops/cmd/images"
 	"github.com/open-traffic-generator/ixops/cmd/otg"
+	"github.com/open-traffic-generator/ixops/cmd/pkgmgmt"
 	"github.com/open-traffic-generator/ixops/cmd/tests"
 	"github.com/open-traffic-generator/ixops/cmd/topology"
 	"github.com/open-traffic-generator/ixops/pkg/configs"
@@ -34,10 +35,11 @@ func Execute() {
 
 func init() {
 	c := configs.GetCmdConfig()
-	rootCmd.PersistentFlags().BoolVarP(&c.Debug, "verbose", "v", true, "Enable verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&c.Debug, "verbose", "v", false, "Enable verbose logging")
 	rootCmd.PersistentFlags().BoolVarP(&c.Quiet, "quiet", "q", false, "Disable logging")
 	rootCmd.PersistentFlags().StringVarP(&c.Config, "config", "c", c.Config, "Path to ixops config")
 
+	rootCmd.AddCommand(pkgmgmt.Cmd())
 	rootCmd.AddCommand(cluster.Cmd())
 	rootCmd.AddCommand(topology.Cmd())
 	rootCmd.AddCommand(images.Cmd())

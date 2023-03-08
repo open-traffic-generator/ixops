@@ -43,6 +43,7 @@ func TestBashExecutor(t *testing.T) {
 		{name: "valid multi cmd", args: args{command: "ls -lht && cat /etc/os-release"}, wantErr: false},
 		{name: "invalid multi cmd", args: args{command: "ls -lhte && cat /etc/os-release"}, wantErr: true},
 		{name: "print env", args: args{command: "echo $HOME"}, wantErr: false},
+		{name: "print custom env", args: args{command: "CUSTOM=custom eval 'echo $CUSTOM'"}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
